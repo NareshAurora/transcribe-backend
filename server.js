@@ -36,8 +36,13 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Multer setup for file uploads
-const upload = multer({ dest: "uploads/" });
+// Multer setup with file size limit
+const upload = multer({
+  dest: "uploads/",
+  limits: {
+    fileSize: 19 * 1024 * 1024 // 19MB limit (leaving buffer)
+  }
+});
 
 // Public API endpoint for audio transcription
 app.post("/upload", upload.single("audio"), async (req, res) => {
@@ -45,6 +50,14 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
 
   if (!file) {
     return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  // Add file size check
+  if (file.size > 19 * 1024 * 1024) {
+    fs.unlink(file.path, (err) => {
+      if (err) console.error("Failed to delete uploaded file:", err);
+    });
+    return res.status(400).json({ error: "File size must be less than 19MB" });
   }
 
   try {
