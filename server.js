@@ -40,10 +40,9 @@ app.use(limiter);
 const upload = multer({
   dest: "uploads/",
   limits: {
-    fileSize: 19 * 1024 * 1024 // 19MB limit (leaving buffer)
+    fileSize: 15 * 1024 * 1024 // 15MB limit to ensure safe transmission
   }
 });
-
 // Public API endpoint for audio transcription
 app.post("/upload", upload.single("audio"), async (req, res) => {
   const file = req.file;
@@ -53,13 +52,13 @@ app.post("/upload", upload.single("audio"), async (req, res) => {
   }
 
   // Add file size check
-  if (file.size > 19 * 1024 * 1024) {
+  if (file.size > 15 * 1024 * 1024) {
     fs.unlink(file.path, (err) => {
       if (err) console.error("Failed to delete uploaded file:", err);
     });
-    return res.status(400).json({ error: "File size must be less than 19MB" });
+    return res.status(400).json({ error: "File size must be less than 15MB" });
   }
-
+  
   try {
     // Read file as base64
     const fileData = fs.readFileSync(file.path, { encoding: 'base64' });
